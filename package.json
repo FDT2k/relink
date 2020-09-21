@@ -1,12 +1,15 @@
 {
   "name": "@geekagency/relink",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
   "bin": {
     "relink": "./dist/index.js"
   },
+  "links": [
+    "@geekagency/composite-js"
+  ],
   "scripts": {
     "build:dev": "rollup -c -w",
     "test": "npx jest ",
@@ -46,6 +49,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "commander": "^6.1.0",
     "executioner": "^2.0.1"
   }
 }
