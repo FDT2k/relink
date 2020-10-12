@@ -1,5 +1,5 @@
 {
-  "name": "@geekagency/relink",
+  "name": "yarn-relink",
   "version": "1.0.3",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -7,9 +7,6 @@
   "bin": {
     "relink": "./dist/index.js"
   },
-  "links": [
-    "@geekagency/composite-js"
-  ],
   "scripts": {
     "build:dev": "rollup -c -w",
     "test": "npx jest ",
