@@ -50,29 +50,22 @@ const readPKG = (packagePath, callback) => {
 };
 
 const relink = depth => config => {
-  //console.warn("deprecated package.json links key. Use relink instead")
-  console.log(depth);
-
-  if (depth <= max_depth) {
-    const packages = config.links;
-
-    if (!config.links) {
-      return console.error('no links defined');
-    }
-
-    var options = {
-      node: node,
-      yarn: yarnBin,
-      // escape package names@versions
-      packages: packages.map(pkg => '"' + pkg + '"').join(' ')
-    };
-    packages.map(pkg => {
-      link_pkg(root_path, pkg);
-      readPKG(path__default['default'].join(root_path, nm_path, pkg), relink(depth + 1));
-    });
-  } else {
-    console.warn('max_depth reached aborting');
+  if (depth > max_depth) {
+    console.error('max_depth reached aborting');
+    return;
   }
+
+  const packages = config.links;
+
+  if (!config.links) {
+    console.error('no links defined');
+    return;
+  }
+
+  packages.map(pkg => {
+    link_pkg(root_path, pkg);
+    readPKG(path__default['default'].join(root_path, nm_path, pkg), relink(depth + 1));
+  });
 };
 
 const spawn_log = log => {
@@ -89,8 +82,6 @@ const link_pkg = (cwd, link_pkg) => {
   spawn_log(log);
 };
 
-const relinkv2 = config => {};
-
 const watch = config => {
   const packages = config.links;
 
@@ -105,8 +96,7 @@ const create_link_pkg = pkg => {
   let log = child_process.spawnSync(`yarn`, ['link'], {
     cwd: path__default['default'].join(root_path, 'node_modules', pkg)
   });
-  log.stderr.length > 0 && console.error(log.stderr.toString());
-  log.stdout.length > 0 && console.log(log.stdout.toString());
+  spawn_log(log);
 };
 
 const link_module = config => {
@@ -122,4 +112,3 @@ if (program__default['default'].watch === true) {
 }
 
 exports.relink = relink;
-exports.relinkv2 = relinkv2;
