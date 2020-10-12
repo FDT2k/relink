@@ -59,7 +59,10 @@ export default {
       'uid',
       'uuid',
       'serialize-error',
-      'mongodb'
+      'mongodb',
+      'executioner',
+      'path',
+      'commander'
     ],
   plugins: [
     shebang(),
