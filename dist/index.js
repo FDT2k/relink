@@ -15,9 +15,7 @@ var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
 var program__default = /*#__PURE__*/_interopDefaultLegacy(program);
 
 const root_path = process.cwd();
-const node = process.argv[0];
 const nm_path = 'node_modules';
-const yarnBin = path__default['default'].resolve(process.env['npm_execpath']);
 const max_depth = 10;
 program__default['default'].option('-w, --watch', 'generate watchlist').option('-m, --mod', 'generate links for all modules in package.json').parse(process.argv);
 
@@ -27,7 +25,6 @@ const relative_path = path => {
 
 const readPKG = (packagePath, callback) => {
   const pkg = path__default['default'].join(packagePath, 'package.json');
-  console.log(`[RELINK] Reading ${relative_path(pkg)}`);
   fs__default['default'].readFile(pkg, 'utf-8', function (error, content) {
     if (error || !content) {
       console.error('Unable to read ' + pkg + ':', error || 'no content');
@@ -49,7 +46,9 @@ const readPKG = (packagePath, callback) => {
   });
 };
 
-const relink = depth => config => {
+const relink = (depth, root) => config => {
+  console.log(`[RELINK] processing links in "${relative_path(root)}"`);
+
   if (depth > max_depth) {
     console.error('max_depth reached aborting');
     return;
@@ -63,8 +62,9 @@ const relink = depth => config => {
   }
 
   packages.map(pkg => {
-    link_pkg(root_path, pkg);
-    readPKG(path__default['default'].join(root_path, nm_path, pkg), relink(depth + 1));
+    link_pkg(root, pkg);
+    let new_path = path__default['default'].join(root, nm_path, pkg);
+    readPKG(new_path, relink(depth + 1, new_path));
   });
 };
 
@@ -74,8 +74,7 @@ const spawn_log = log => {
 };
 
 const link_pkg = (cwd, link_pkg) => {
-  const relativepath = cwd.replace(root_path, './');
-  console.info(`linking ${link_pkg} in ${relativepath} `);
+  console.info(`linking ${link_pkg} in ${relative_path(cwd)} `);
   let log = child_process.spawnSync(`yarn`, ['link', link_pkg], {
     cwd
   });
@@ -88,7 +87,16 @@ const watch = config => {
   if (!config.links) {
     console.log('');
   } else {
-    console.log(config.links.map(pk => `--watch node_modules/${pk}`).join(' '));
+    console.log(config.links.map(pk => {
+      const dest_folder = path__default['default'].join(root_path, nm_path, pk, 'package.json');
+      const pkg = JSON.parse(fs__default['default'].readFileSync(dest_folder).toString('utf-8'));
+
+      if (pkg.relink && pkg.relink.watchFolder) {
+        return `--watch ${nm_path}/${pk}/${pkg.relink.watchFolder}`;
+      }
+
+      return `--watch ${nm_path}/${pk}`;
+    }).join(' '));
   }
 };
 
@@ -108,7 +116,7 @@ if (program__default['default'].watch === true) {
 } else if (program__default['default'].mod === true) {
   readPKG(root_path, link_module);
 } else {
-  readPKG(root_path, relink(0));
+  readPKG(root_path, relink(0, root_path));
 }
 
 exports.relink = relink;
